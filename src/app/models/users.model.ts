@@ -1,5 +1,11 @@
-import { model, Schema } from "mongoose";
-import { IAddress, IUser } from "../interfaces/user.interface";
+import bcrypt from "bcrypt";
+import { Model, model, Schema } from "mongoose";
+import {
+  IAddress,
+  IUser,
+  UserInstanceMethods,
+  UserStaticMethods,
+} from "../interfaces/user.interface";
 import validator from "validator";
 
 const addressSchema = new Schema<IAddress>(
@@ -13,7 +19,7 @@ const addressSchema = new Schema<IAddress>(
   }
 );
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IUser, UserStaticMethods, UserInstanceMethods>(
   {
     firstName: {
       type: String,
@@ -39,8 +45,7 @@ const userSchema = new Schema<IUser>(
       //   message: (props) => `${props.value} is not a valid email address.`,
       // },
 
-      // using package custom validator
-      validate: [validator.isEmail, "Invalid Email Send {VALUE}"],
+      validate: [validator.isEmail, "Invalid Email Send {VALUE}"], // using package custom validator
     },
     password: { type: String, required: true },
     role: {
@@ -52,7 +57,7 @@ const userSchema = new Schema<IUser>(
       },
       default: "SUPERADMIN",
     },
-    address: { type: addressSchema },
+    address: { type: addressSchema }, //Embedding in Mongoose
   },
   {
     versionKey: false,
@@ -60,4 +65,16 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-export const User = model("User", userSchema);
+// custom instance methods
+userSchema.method("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+// static methods
+userSchema.static("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+export const User = model<IUser, UserStaticMethods>("User", userSchema);

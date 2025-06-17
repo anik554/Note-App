@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { User } from "../models/users.model";
+import bcrypt from "bcrypt";
 import { z } from "zod";
 
 export const userRouter = express.Router();
@@ -18,9 +19,55 @@ const UserZodSchema = z.object({
   }),
 });
 
-userRouter.post("/create-user", async (req: Request, res: Response) => {
+/*userRouter.post("/create-user", async (req: Request, res: Response) => {
   try {
     const data = await UserZodSchema.parseAsync(req.body);
+    const user = await User.create(data);
+    // await user.save()  this is a build in instance methrod
+    res.status(201).json({
+      success: true,
+      message: "User has been created successfully!",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});*/
+
+// using coustom instance methods in mongoose
+/*userRouter.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const user = await new User(data);
+    const password = await user.hashPassword(data.password);
+    user.password = password;
+    await user.save();
+    res.status(201).json({
+      success: true,
+      message: "User has been created successfully!",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});*/
+
+// using coustom static methods in mongoose
+userRouter.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const password = await User.hashPassword(data.password);
+    data.password = password;
     const user = await User.create(data);
     res.status(201).json({
       success: true,

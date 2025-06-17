@@ -13,7 +13,7 @@ notesRouter.post("/create-note", async (req: Request, res: Response) => {
 });
 
 notesRouter.get("/all-notes", async (req: Request, res: Response) => {
-  const notes = await Note.find();
+  const notes = await Note.find().populate("user");  // populate find user info by id from user collection
   res.status(200).json({
     success: true,
     message: "Retrived all notes",
